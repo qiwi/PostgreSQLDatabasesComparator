@@ -175,12 +175,12 @@ export class SQLGenerator {
 
             if (typeof rowTest[key] != 'number') {
 
-                commandForTestToProd += columnName + ` = '` + rowTest[key] + `' AND `;
-                commandForProdToTest += columnName + ` = '` + rowProd[key] + `' AND `;
+                commandForTestToProd += columnName + ` = '` + rowProd[key] + `' AND `;
+                commandForProdToTest += columnName + ` = '` + rowTest[key] + `' AND `;
             } else {
 
-                commandForTestToProd += columnName + ` = ` + rowTest[key] + ` AND `;
-                commandForProdToTest += columnName + ` = ` + rowProd[key] + ` AND `;
+                commandForTestToProd += columnName + ` = ` + rowProd[key] + ` AND `;
+                commandForProdToTest += columnName + ` = ` + rowTest[key] + ` AND `;
             }
         });
 
