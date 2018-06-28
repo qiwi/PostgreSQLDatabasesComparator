@@ -161,6 +161,67 @@ describe('Comparator', function () {
             chai.expect(comparator.compareTables(tableTestInfo, tableProdInfo, comparatorSettings)).to.eql([expectedDiff]);
         });
 
+        it('should return diff on different tables values with one empty table', function () {
+
+            const tableTestInfo: ITableInfo = {
+
+                tableName: "table",
+                primaryKeys: ['column'],
+                tableData: [
+                    {column: 'value', column2: 'value2'}
+                ]
+            };
+
+            const tableProdInfo: ITableInfo = {
+
+                tableName: "table",
+                primaryKeys: ['column'],
+                tableData: []
+            };
+
+            const comparatorSettings: IComparatorSettings = {
+                searchByPrimaries: true,
+                ignorePrimaries: false
+            };
+
+            const expectedDiff: IDifference = {
+                type: DiffGenerator.NO_SUCH_ROW,
+
+                schema: PROD_DB,
+                primaryKeys: ['column'],
+                table: tableName,
+
+                valueInTest: {column: 'value', column2: 'value2'},
+                valueInProd: null,
+            };
+
+            chai.expect(comparator.compareTables(tableTestInfo, tableProdInfo, comparatorSettings)).to.eql([expectedDiff]);
+        });
+
+        it('should return no diffs on empty tables', function () {
+
+            const tableTestInfo: ITableInfo = {
+
+                tableName: "table",
+                primaryKeys: ['column'],
+                tableData: []
+            };
+
+            const tableProdInfo: ITableInfo = {
+
+                tableName: "table",
+                primaryKeys: ['column'],
+                tableData: []
+            };
+
+            const comparatorSettings: IComparatorSettings = {
+                searchByPrimaries: true,
+                ignorePrimaries: false
+            };
+
+            chai.expect(comparator.compareTables(tableTestInfo, tableProdInfo, comparatorSettings)).to.eql([]);
+        });
+
         it('should return diff on different tables values with settings to search by values', function () {
 
             const tableTestInfo: ITableInfo = {

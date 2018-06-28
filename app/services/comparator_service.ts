@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 import { DiffGenerator, IDifference } from "./diff_generator_service";
 
-import { logger, TEST_DB } from "../../globals";
+import { TEST_DB } from "../../globals";
 import { PROD_DB, IGNORE_VALUES_PATTERN } from "../../globals";
 import { ITableStructure } from "../models/list_tables";
-import { isNull } from "util";
+import {isNull} from "util";
 
 export interface ITableInfo {
     tableName: string;
@@ -144,8 +144,10 @@ export class Comparator {
     }
 
     checkTablesStructure(rowTest: any, rowProd: any) {
-        const row1Columns: Array<string> = Object.keys(rowTest);
-        const row2Columns: Array<string> = Object.keys(rowProd);
+        const row1Columns: Array<string> = !rowTest ? null : Object.keys(rowTest);
+        const row2Columns: Array<string> = !rowProd ? null : Object.keys(rowProd);
+
+        if(!row1Columns || !row2Columns) return;
 
         this.uniqueColumnsInTest = row1Columns.filter(val => row2Columns.indexOf(val) == -1);
         this.uniqueColumnsInProd = row2Columns.filter(val => row1Columns.indexOf(val) == -1);
