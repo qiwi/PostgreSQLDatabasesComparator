@@ -10,10 +10,7 @@ import * as globals from "../../globals";
 import { PROD_DB, TEST_DB } from "../../globals";
 import { DiffGenerator, IDifference } from "../services/diff_generator_service";
 
-const PassThrough = require('stream').PassThrough;
 const dbServices = globals.dbServices;
-const path = require('path');
-const extname = path.extname;
 
 export class BaseController extends Controller {
 
@@ -60,7 +57,7 @@ export class BaseController extends Controller {
             this.SQLGenerator.generateSQLAndReturnTestToProdFile(differences["ContentDifferences"]);
 
         if (data.disableConstraintsCheck) {
-            SQLCommandsTestToProd = `SET session_replication_role = replica;${SQLCommandsTestToProd}SET session_replication_role = DEFAULT;`;
+            SQLCommandsTestToProd = `SET session_replication_role = replica;\r\n${SQLCommandsTestToProd}\r\nSET session_replication_role = DEFAULT;`;
         }
 
         ctx.response.set('Content-Type', 'text/plain');

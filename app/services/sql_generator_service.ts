@@ -3,7 +3,6 @@ import * as config from "config";
 import {DiffGenerator, IDifference} from "./diff_generator_service";
 
 const fs = require('fs');
-const path = require('path');
 import {logger, PROD_DB, TEST_DB, dbServices} from "../../globals";
 import {isNull, isUndefined} from "util";
 
