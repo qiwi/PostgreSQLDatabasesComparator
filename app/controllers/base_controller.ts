@@ -10,7 +10,10 @@ import * as globals from "../../globals";
 import { PROD_DB, TEST_DB } from "../../globals";
 import { DiffGenerator, IDifference } from "../services/diff_generator_service";
 
+const PassThrough = require('stream').PassThrough;
 const dbServices = globals.dbServices;
+const path = require('path');
+const extname = path.extname;
 
 export class BaseController extends Controller {
 
@@ -26,6 +29,46 @@ export class BaseController extends Controller {
         });
         this.setNewServiceName(data.serviceName);
 
+        let differences = await this.generateDiffs();
+
+        let {SQLCommandsTestToProd: testToProd, SQLCommandsProdToTest: prodToTest} =
+            this.SQLGenerator.generateSQLFillDiffsAndCreateFiles(differences["ContentDifferences"]);
+
+        if (differences["DDLDifferences"].length === 0)
+            differences["DDLDifferences"] = `There are no differences in DDL`;
+
+        differences["SQLTestToProd"] = testToProd;
+        differences["SQLProdToTest"] = prodToTest;
+
+        ctx.body = differences;
+        next();
+    };
+
+    getTestToProdSQLFile = async (ctx: Context): Promise<void> => {
+
+        const data = this.validate(ctx, (validator) => {
+            return {
+                serviceName: validator.optional.isString('dbServiceName', 0, 30),
+                disableConstraintsCheck: validator.optional.isInt('disableConstraintsCheck', 0, 1)
+            }
+        });
+        this.setNewServiceName(data.serviceName);
+
+        let differences = await this.generateDiffs();
+
+        let {SQLCommandsTestToProd: SQLCommandsTestToProd, fileName: fileName} =
+            this.SQLGenerator.generateSQLAndReturnTestToProdFile(differences["ContentDifferences"]);
+
+        if (data.disableConstraintsCheck) {
+            SQLCommandsTestToProd = `SET session_replication_role = replica;${SQLCommandsTestToProd}SET session_replication_role = DEFAULT;`;
+        }
+
+        ctx.response.set('Content-Type', 'text/plain');
+        ctx.response.set('Content-Disposition', `attachment; filename="${fileName}"`);
+        ctx.response.body = SQLCommandsTestToProd;
+    };
+
+    async generateDiffs(): Promise<any> {
         let differences = {};
         let {tablesToCompare: tablesToCompare, tablesDifferences: tablesDiffs} = await this.getTablesToCompare();
 
@@ -46,19 +89,9 @@ export class BaseController extends Controller {
 
             differences["DDLDifferences"] = differences["DDLDifferences"].concat(ddlDiffs);
         }
+        return differences;
+    }
 
-        let {SQLCommandsTestToProd: testToProd, SQLCommandsProdToTest: prodToTest} =
-            this.SQLGenerator.generateSQLAndFillDiffs(differences["ContentDifferences"]);
-
-        if (differences["DDLDifferences"].length === 0)
-            differences["DDLDifferences"] = `There are no differences in DDL`;
-
-        differences["SQLTestToProd"] = testToProd;
-        differences["SQLProdToTest"] = prodToTest;
-
-        ctx.body = differences;
-        next();
-    };
 
     async getTablesToCompare(): Promise<{ tablesToCompare: Array<ITableStructure>, tablesDifferences: Array<IDifference> }> {
         let tablesToCompare: Array<string> =

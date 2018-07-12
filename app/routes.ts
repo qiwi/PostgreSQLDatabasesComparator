@@ -16,11 +16,15 @@ const baseController = new BaseController();
  * @apiSuccess {Object} result Объект ответа. Массив различий в значениях с их описанием.
  * @apiError {Any} error Текст/код ошибки сервиса.
  */
-const pathToCompare: string = config.get('url') + 'getDifferences';
 
 router
-    .get(pathToCompare, baseController.getDifferences);
+    .get(config.get('url') + 'getDifferences', baseController.getDifferences);
 
-logger.info(`URL to compare databases from config : ` + pathToCompare + `?dbServiceName=*dbServiceName*  dbServiceName must be described in config file`);
+router
+    .get(config.get('url') + 'getTestToProdSQL', baseController.getTestToProdSQLFile);
+
+logger.info(`URL to compare databases from config : ` + config.get('url') + 'getDifferences' + ` Params: dbServiceName (optional) dbServiceName must be described in config file`);
+logger.info(`URL to get file with sql commands from prod to test : ` + config.get('url') + 'getTestToProdSQL' +
+    ` Params: dbServiceName dbServiceName must be described in config file, disableConstraintsCheck (0 - false, 1 - true) (optional) if true in sql commands will be added lines to disable constraints check and enable after all queries`);
 
 export {router};
