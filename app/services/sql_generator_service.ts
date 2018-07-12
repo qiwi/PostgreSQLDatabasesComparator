@@ -3,13 +3,39 @@ import * as config from "config";
 import {DiffGenerator, IDifference} from "./diff_generator_service";
 
 const fs = require('fs');
-
 import {logger, PROD_DB, TEST_DB, dbServices} from "../../globals";
 import {isNull, isUndefined} from "util";
 
 export class SQLGenerator {
 
     serviceName: string;
+
+    generateSQLFillDiffsAndCreateFiles(differences: Array<any>): { SQLCommandsTestToProd: string, SQLCommandsProdToTest: string } {
+
+        let {SQLCommandsTestToProd: testToProd, SQLCommandsProdToTest: prodToTest} = this.generateSQLAndFillDiffs(differences);
+
+        const pathForTestSQL: string = config.get<string>(this.serviceName + '.pathForSQLFiles') + '/SQLCommandsTestDataToProd.sql';
+        fs.writeFile(pathForTestSQL, testToProd, function (err) {
+            if (err) {
+                logger.error(err);
+            }
+        });
+
+        const pathForProdSQL: string = config.get<string>(this.serviceName + '.pathForSQLFiles') + '/SQLCommandsProdDataToTest.sql';
+        fs.writeFile(pathForProdSQL, prodToTest, function (err) {
+            if (err) {
+                logger.error(err);
+            }
+        });
+        return {SQLCommandsTestToProd: testToProd, SQLCommandsProdToTest: prodToTest};
+    }
+
+    generateSQLAndReturnTestToProdFile(differences: Array<any>): {SQLCommandsTestToProd: string, fileName: string} {
+        const fileName =  '/SQLCommandsTestDataToProd.txt';
+        let {SQLCommandsTestToProd: testToProd, SQLCommandsProdToTest: prodToTest} = this.generateSQLAndFillDiffs(differences);
+
+        return {SQLCommandsTestToProd: testToProd,  fileName};
+    }
 
     generateSQLAndFillDiffs(differences: Array<any>): { SQLCommandsTestToProd: string, SQLCommandsProdToTest: string } {
 
@@ -61,20 +87,6 @@ export class SQLGenerator {
 
         });
 
-        const pathForTestSQL: string = config.get<string>(this.serviceName + '.pathForSQLFiles') + '/SQLCommandsTestDataToProd';
-        fs.writeFile(pathForTestSQL, SQLCommandsTestToProd, function (err) {
-            if (err) {
-                logger.error(err);
-            }
-        });
-
-        const pathForProdSQL: string = config.get<string>(this.serviceName + '.pathForSQLFiles') + '/SQLCommandsProdDataToTest';
-        fs.writeFile(pathForProdSQL, SQLCommandsProdToTest, function (err) {
-            if (err) {
-                logger.error(err);
-            }
-        });
-
         return {SQLCommandsTestToProd: SQLCommandsTestToProd, SQLCommandsProdToTest: SQLCommandsProdToTest};
     }
 
@@ -83,10 +95,10 @@ export class SQLGenerator {
         let schemaName: string;
         let row: any;
 
-        if(!isNull(difference.valueInTest)){
+        if (!isNull(difference.valueInTest)) {
             schemaName = config.get<string>(dbServices.currentServiceName + '.prod_db.schemaName');
             row = difference.valueInTest;
-        } else{
+        } else {
             schemaName = config.get<string>(dbServices.currentServiceName + '.test_db.schemaName');
             row = difference.valueInProd;
         }
@@ -103,8 +115,6 @@ export class SQLGenerator {
         SQLcommand = SQLcommand.substr(0, SQLcommand.length - 2);
 
         SQLcommand += `)\r\n\t VALUES (`;
-
-        console.log(row);
 
         Object.keys(row).forEach(key => {
 
@@ -219,11 +229,11 @@ export class SQLGenerator {
     addValueToSQLString(value): string {
         if (isNull(value) || isUndefined(value)) {
             return `default, `;
-        } else if (typeof value == 'number'){
+        } else if (typeof value == 'number') {
             return value.toString() + `, `;
-        } else if(Array.isArray(value)){
+        } else if (Array.isArray(value)) {
             return `'{` + value.toString() + `}', `;
-        } else if(typeof value == 'object'){
+        } else if (typeof value == 'object') {
             return `'` + JSON.stringify(value) + `', `;
         }
 
@@ -231,11 +241,11 @@ export class SQLGenerator {
     }
 
     addValueAssigntmentToSQLString(name: string, value): string {
-        if (typeof value == 'number'){
+        if (typeof value == 'number') {
             return _.snakeCase(name) + ` = ` + value.toString() + `, `;
-        } else if(Array.isArray(value)){
+        } else if (Array.isArray(value)) {
             return _.snakeCase(name) + ` = '{` + value.toString() + `}', `;
-        } else if(typeof value == 'object'){
+        } else if (typeof value == 'object') {
             return _.snakeCase(name) + ` = '` + JSON.stringify(value) + `', `;
         }
 

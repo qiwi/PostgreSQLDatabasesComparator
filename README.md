@@ -5,7 +5,9 @@ How to use:
 
 Fill config before use
 
-To get differences: localhost:8089/comparator/differences?dbServiceName=*dbServiceName* //*dbServiceName* must be described in config
+URL to compare databases from config : /comparator/getDifferences Params: dbServiceName  dbServiceName must be described in config file
+URL to get file with sql commands from prod to test : /comparator/getTestToProdSQL Params: dbServiceName dbServiceName must be described in config file,
+ disableConstraintsCheck (0 - false, 1 - true) if true in sql commands will be added lines to disable constraints check and enable after all queries
 
 Config sample
 ```JavaScript
