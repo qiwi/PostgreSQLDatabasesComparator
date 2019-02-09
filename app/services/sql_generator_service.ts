@@ -245,6 +245,8 @@ export class SQLGenerator {
             return _.snakeCase(name) + ` = ` + value.toString() + `, `;
         } else if (Array.isArray(value)) {
             return _.snakeCase(name) + ` = '{` + value.toString() + `}', `;
+        } else if (value == null) {
+            return _.snakeCase(name) + ` = ` + JSON.stringify(value) + `, `;
         } else if (typeof value == 'object') {
             return _.snakeCase(name) + ` = '` + JSON.stringify(value) + `', `;
         }
